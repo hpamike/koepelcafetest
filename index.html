@@ -1,0 +1,184 @@
+<!doctype html>
+<html lang="nl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Dashboard De Binnenplaats (oefendata)</title>
+<style>
+:root{color-scheme:light;
+ --page:#f9f9f7;--surface:#fcfcfb;--ink:#0b0b0b;--ink2:#52514e;--muted:#6f6e69;--grid:#e1e0d9;--axis:#c3c2b7;--ring:rgba(11,11,11,.10);
+ --s1:#2a78d6;--s2:#eb6834;--s3:#1baf7a;--s4:#eda100;--plus:#2a78d6;--min:#e34948;--grijs:#898781;--actie:#f1f0ec}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){color-scheme:dark;
+ --page:#0d0d0d;--surface:#1a1a19;--ink:#f0efec;--ink2:#c3c2b7;--muted:#a3a29a;--grid:#2c2c2a;--axis:#383835;--ring:rgba(255,255,255,.10);
+ --s1:#3987e5;--s2:#d95926;--s3:#199e70;--s4:#c98500;--plus:#3987e5;--min:#e66767;--grijs:#77766f;--actie:#252523}}
+:root[data-theme="dark"]{color-scheme:dark;
+ --page:#0d0d0d;--surface:#1a1a19;--ink:#f0efec;--ink2:#c3c2b7;--muted:#a3a29a;--grid:#2c2c2a;--axis:#383835;--ring:rgba(255,255,255,.10);
+ --s1:#3987e5;--s2:#d95926;--s3:#199e70;--s4:#c98500;--plus:#3987e5;--min:#e66767;--grijs:#77766f;--actie:#252523}
+*{box-sizing:border-box}
+body{margin:0;background:var(--page);color:var(--ink);font:16px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif;-webkit-text-size-adjust:100%}
+main{max-width:880px;margin:0 auto;padding:32px 16px 48px}
+header{margin-bottom:24px}
+h1{font-size:26px;line-height:1.2;margin:0 0 6px;font-weight:650}
+header p{margin:0;color:var(--ink2);font-size:15px}
+header .oefen{display:inline-block;margin:0 0 8px;padding:4px 10px;background:var(--actie);border-radius:6px;color:var(--ink);font-size:14px;font-weight:600}
+.tiles{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:24px}
+.tile,.card{background:var(--surface);border-radius:12px;box-shadow:0 0 0 1px var(--ring)}
+.tile{padding:16px;min-width:0}
+.tile .l{font-size:14px;color:var(--ink2)}
+.tile .v{font-size:27px;line-height:1.25;font-weight:650;margin:4px 0;white-space:nowrap}
+.tile .n{font-size:13px;line-height:1.35;color:var(--muted)}
+.card{padding:24px;margin-bottom:16px}
+h2{font-size:19px;line-height:1.3;margin:0 0 4px;font-weight:650}
+.sub{margin:0 0 16px;color:var(--ink2);font-size:14px}
+.legend{display:flex;flex-wrap:wrap;gap:6px 16px;margin:0 0 12px;padding:0;list-style:none;font-size:13px;color:var(--ink2)}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:6px}
+/* grafiek 1 */
+.cols{position:relative;display:grid;grid-template-columns:40px 1fr;height:292px}
+.yas{position:relative;height:250px;margin-top:22px;font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums}
+.yas span{position:absolute;right:8px;transform:translateY(50%)}
+.plot{position:relative;height:250px;margin-top:22px;border-bottom:1px solid var(--axis)}
+.gl{position:absolute;left:0;right:0;height:1px;background:var(--grid)}
+.bands{position:absolute;inset:0;display:grid;grid-template-columns:repeat(7,1fr)}
+.band{position:relative;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;background:none;border:0;padding:0;font:inherit;color:inherit;cursor:default;border-radius:6px}
+.stack{width:24px;max-width:70%;display:flex;flex-direction:column;gap:2px}
+.stack b{display:block}
+.stack b:first-child{border-radius:4px 4px 0 0}
+.tot{font-size:12px;font-variant-numeric:tabular-nums;color:var(--ink2);margin-bottom:3px}
+.xas{grid-column:2;display:grid;grid-template-columns:repeat(7,1fr);font-size:13px;color:var(--ink2);text-align:center;padding-top:5px}
+.xas .sterk{color:var(--ink);font-weight:650}
+/* horizontale balken */
+.rows{display:grid;gap:4px}
+.gh{font-size:12px;font-weight:600;color:var(--muted);margin-top:10px}
+.gh:first-child{margin-top:0}
+.row{display:grid;grid-template-columns:150px 1fr;align-items:center;gap:8px;min-height:30px;background:none;border:0;padding:0;font:inherit;color:inherit;text-align:left;border-radius:6px;width:100%}
+.row .lb{font-size:14px;line-height:1.2;color:var(--ink2)}
+.row .tr{position:relative;height:30px}
+.row .bar{position:absolute;top:6px;height:18px}
+.row .val{position:absolute;top:0;line-height:30px;font-size:13px;font-variant-numeric:tabular-nums;color:var(--ink);white-space:nowrap}
+.nul{position:absolute;top:-2px;bottom:-2px;width:1px;background:var(--axis)}
+.hl .lb{color:var(--ink);font-weight:650}
+.band:hover .stack,.row:hover .bar{opacity:.82}
+.band:focus-visible,.row:focus-visible,summary:focus-visible{outline:2px solid var(--s1);outline-offset:2px}
+.actie{margin:18px 0 0;padding:12px 14px;background:var(--actie);border-radius:8px;font-size:15px;line-height:1.45}
+.actie strong{font-weight:650}
+details{margin-top:12px;font-size:14px;color:var(--ink2)}
+summary{cursor:pointer;padding:4px 0}
+.tw{overflow-x:auto}
+table{border-collapse:collapse;width:100%;margin-top:6px;font-size:13px}
+th,td{padding:6px 8px;border-bottom:1px solid var(--grid);text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+th:first-child,td:first-child{text-align:left}
+th{font-weight:600;color:var(--ink)}
+footer{color:var(--muted);font-size:13px;line-height:1.5;padding:8px 4px 0}
+footer p{margin:0 0 8px}
+#tip{position:fixed;z-index:5;max-width:230px;padding:8px 10px;border-radius:8px;background:var(--ink);color:var(--surface);font-size:13px;line-height:1.35;pointer-events:none;display:none;white-space:pre-line}
+@media (max-width:760px){.tiles{grid-template-columns:repeat(2,1fr)}}
+@media (max-width:560px){main{padding:20px 16px 32px}h1{font-size:23px}.card{padding:16px}.tile{padding:14px}.tile .v{font-size:23px}h2{font-size:18px}.row{grid-template-columns:112px 1fr}.row .lb{font-size:13px}}
+@media (forced-colors:active){.stack b,.row .bar{forced-color-adjust:none}}
+</style>
+</head>
+<body>
+<main>
+<header>
+ <h1>Café De Binnenplaats</h1>
+ <p class="oefen">Oefendata: alle cijfers zijn verzonnen.</p>
+ <p id="periode"></p>
+</header>
+<section class="tiles" id="tiles" aria-label="Kerncijfers"></section>
+
+<section class="card">
+ <h2>Het geld komt op vrijdag t/m zondag en tijdens lunch en borrel</h2>
+ <p class="sub" id="s1"></p>
+ <ul class="legend" id="leg1"></ul>
+ <div class="cols" id="g1"></div>
+ <p class="actie"><strong>Wat je ermee doet:</strong> leg je rooster en loonkosten per dagdeel naast deze cijfers en controleer of de bezetting past bij de drukte en of maandag en dinsdag lonen.</p>
+ <details><summary>Bekijk als tabel</summary><div class="tw" id="t1"></div></details>
+</section>
+
+<section class="card">
+ <h2>Events en warme dagen maken de pieken, veel regen drukt de omzet</h2>
+ <p class="sub">Omzet in vergelijking met een normale dag van dezelfde weekdag. Warme dagen vallen ook in de zomer, dus niet het hele verschil komt door het weer.</p>
+ <div class="rows" id="g2"></div>
+ <p class="actie"><strong>Wat je ermee doet:</strong> plan rooster en inkoop op de eventkalender van De Koepel en op de weersverwachting, zodat je op piekdagen genoeg mensen en voorraad hebt.</p>
+ <details><summary>Bekijk als tabel</summary><div class="tw" id="t2"></div></details>
+</section>
+
+<section class="card">
+ <h2>Burger Koepel verdient veel minder dan de andere hoofdgerechten</h2>
+ <p class="sub" id="s3"></p>
+ <div class="rows" id="g3"></div>
+ <p class="actie"><strong>Wat je ermee doet:</strong> controleer eerst of de kostprijs klopt, en kijk daarna naar recept en inkoop voordat je de prijs aanpast.</p>
+ <details><summary>Bekijk als tabel</summary><div class="tw" id="t3"></div></details>
+</section>
+
+<footer>
+ <p>Omzet is inclusief btw, zonder fooi en met correcties verrekend. Brutomarge is omzet zonder btw min de kostprijs, dus vóór personeel, huur en andere kosten.</p>
+</footer>
+</main>
+<div id="tip" role="status"></div>
+<script>
+const D={"kern": {"omzet": 1160000, "marge": 710000, "pct": 68.5, "bonnen": 35501, "nul": 255, "gem": 32.82, "dagen": 353}, "g1": [{"dag": "Maandag", "kort": "ma", "open": 43, "lunch": 577, "borrel": 297, "diner": 0, "rest": 293, "totaal": 1167}, {"dag": "Dinsdag", "kort": "di", "open": 52, "lunch": 569, "borrel": 318, "diner": 0, "rest": 302, "totaal": 1189}, {"dag": "Woensdag", "kort": "wo", "open": 52, "lunch": 650, "borrel": 361, "diner": 476, "rest": 359, "totaal": 1845}, {"dag": "Donderdag", "kort": "do", "open": 50, "lunch": 709, "borrel": 362, "diner": 501, "rest": 376, "totaal": 1949}, {"dag": "Vrijdag", "kort": "vr", "open": 52, "lunch": 873, "borrel": 488, "diner": 616, "rest": 480, "totaal": 2458}, {"dag": "Zaterdag", "kort": "za", "open": 52, "lunch": 1081, "borrel": 587, "diner": 777, "rest": 588, "totaal": 3034}, {"dag": "Zondag", "kort": "zo", "open": 52, "lunch": 822, "borrel": 477, "diner": 597, "rest": 446, "totaal": 2341}], "s1": {"vrzo": 57.1, "lb": 58.2}, "g2": [{"groep": "Event", "label": "Eventdag", "dagen": 5, "pct": 58, "omzet": 7246}, {"groep": "Temperatuur", "label": "25 graden of warmer", "dagen": 6, "pct": 38, "omzet": 4707}, {"groep": "Temperatuur", "label": "20 tot 25 graden", "dagen": 18, "pct": 19, "omzet": 3846}, {"groep": "Temperatuur", "label": "15 tot 20 graden", "dagen": 71, "pct": 10, "omzet": 3472}, {"groep": "Temperatuur", "label": "10 tot 15 graden", "dagen": 91, "pct": 2, "omzet": 3247}, {"groep": "Temperatuur", "label": "5 tot 10 graden", "dagen": 97, "pct": -7, "omzet": 2834}, {"groep": "Temperatuur", "label": "Tot 5 graden", "dagen": 65, "pct": -7, "omzet": 3173}, {"groep": "Regen", "label": "Droog", "dagen": 247, "pct": 2, "omzet": 3272}, {"groep": "Regen", "label": "Meer dan 5 mm", "dagen": 24, "pct": -13, "omzet": 2636}], "g3": [{"id": "D06", "product": "Pasta truffel", "pct": 71.6}, {"id": "D03", "product": "Vegan burger", "pct": 65.4}, {"id": "D01", "product": "Dagschotel", "pct": 63.5}, {"id": "D05", "product": "Saté van de haas", "pct": 62.0}, {"id": "D04", "product": "Vis van de dag", "pct": 52.5}, {"id": "D02", "product": "Burger Koepel", "pct": 44.6}]};
+const eur=(v,d=0)=>'€ '+v.toLocaleString('nl-NL',{minimumFractionDigits:d,maximumFractionDigits:d});
+const nr=(v,d=0)=>v.toLocaleString('nl-NL',{minimumFractionDigits:d,maximumFractionDigits:d});
+const pm=v=>(v>0?'+':v<0?'−':'')+Math.abs(v)+'%';
+const $=id=>document.getElementById(id);
+const tabel=(kop,rijen)=>'<table><thead><tr>'+kop.map(k=>'<th scope="col">'+k+'</th>').join('')+'</tr></thead><tbody>'+rijen.map(r=>'<tr>'+r.map(c=>'<td>'+c+'</td>').join('')+'</tr>').join('')+'</tbody></table>';
+const k=D.kern;
+$('periode').textContent='1 oktober 2025 t/m 30 september 2026, '+k.dagen+' open dagen';
+$('tiles').innerHTML=[
+ ['Omzet',eur(k.omzet),'afgerond, inclusief btw, zonder fooi'],
+ ['Aantal bonnen',nr(k.bonnen),nr(k.nul)+' daarvan zonder omzet'],
+ ['Gemiddelde bon',eur(k.gem,2),'alleen bonnen met omzet'],
+ ['Brutomarge',eur(k.marge),'afgerond, '+nr(k.pct,1)+'% van de omzet zonder btw']
+].map(t=>'<div class="tile"><div class="l">'+t[0]+'</div><div class="v">'+t[1]+'</div><div class="n">'+t[2]+'</div></div>').join('');
+
+/* grafiek 1 */
+$('s1').textContent='Brutomarge per open dag, in euro. Vrijdag t/m zondag leveren '+nr(D.s1.vrzo,1)+'% van de marge op, lunch en borrel samen '+nr(D.s1.lb,1)+'%.';
+const S=[['rest','Ochtend en middag','--s4'],['diner','Diner','--s3'],['borrel','Borrel','--s2'],['lunch','Lunch','--s1']];
+$('leg1').innerHTML=[...S].reverse().map(s=>'<li><i style="background:var('+s[2]+')"></i>'+s[1]+'</li>').join('');
+const max=3500,ticks=[0,1000,2000,3000];
+const pc=v=>v/max*100;
+$('g1').innerHTML='<div class="yas">'+ticks.map(t=>'<span style="bottom:'+pc(t)+'%">'+nr(t)+'</span>').join('')+'</div><div class="plot">'
+ +ticks.filter(t=>t).map(t=>'<div class="gl" style="bottom:'+pc(t)+'%"></div>').join('')
+ +'<div class="bands">'+D.g1.map(d=>{
+   const tip=d.dag+' ('+d.open+' open dagen)\nLunch '+eur(d.lunch)+'\nBorrel '+eur(d.borrel)+'\n'+(d.diner?'Diner '+eur(d.diner):'Geen diner')+'\nOchtend en middag '+eur(d.rest)+'\nTotaal '+eur(d.totaal);
+   return '<button type="button" class="band" data-tip="'+tip+'" aria-label="'+tip.replace(/\n/g,', ')+'"><span class="tot">'+nr(d.totaal)+'</span><span class="stack">'
+    +S.filter(s=>d[s[0]]>0).map(s=>'<b style="height:'+(d[s[0]]/max*250-2).toFixed(1)+'px;background:var('+s[2]+')"></b>').join('')+'</span></button>'}).join('')+'</div></div>'
+ +'<div class="xas">'+D.g1.map(d=>'<span'+(['vr','za','zo'].includes(d.kort)?' class="sterk"':'')+'>'+d.kort+'</span>').join('')+'</div>';
+$('t1').innerHTML=tabel(['Dag','Open dagen','Lunch','Borrel','Diner','Ochtend en middag','Totaal per dag'],D.g1.map(d=>[d.dag,d.open,eur(d.lunch),eur(d.borrel),d.diner?eur(d.diner):'geen',eur(d.rest),eur(d.totaal)]));
+
+/* grafiek 2 */
+const lo=-35,hi=90,x=v=>(v-lo)/(hi-lo)*100;let groep='';
+$('g2').innerHTML=D.g2.map(r=>{
+ let h='';if(r.groep!==groep){groep=r.groep;h='<div class="gh">'+groep+'</div>'}
+ const links=Math.min(r.pct,0),breed=Math.abs(r.pct),kleur=r.pct>=0?'--plus':'--min',rad=r.pct>=0?'0 4px 4px 0':'4px 0 0 4px';
+ const val=r.pct>=0?'left:calc('+x(r.pct)+'% + 5px)':'right:calc('+(100-x(r.pct))+'% + 5px)';
+ const tip=r.label+'\n'+r.dagen+' dagen, gemiddeld '+eur(r.omzet)+' omzet\n'+pm(r.pct)+' t.o.v. een normale dag';
+ return h+'<button type="button" class="row" data-tip="'+tip+'" aria-label="'+tip.replace(/\n/g,', ')+'"><span class="lb">'+r.label+'</span><span class="tr"><span class="nul" style="left:'+x(0)+'%"></span>'
+  +(breed?'<span class="bar" style="left:'+x(links)+'%;width:calc('+(breed/(hi-lo)*100)+'% - 1px);margin-left:'+(r.pct>=0?'1px':'0')+';background:var('+kleur+');border-radius:'+rad+'"></span>':'')
+  +'<span class="val" style="'+val+'">'+pm(r.pct)+'</span></span></button>'}).join('');
+$('t2').innerHTML=tabel(['Soort dag','Dagen','Gem. omzet','Verschil'],D.g2.map(r=>[r.label,r.dagen,eur(r.omzet),pm(r.pct)]));
+
+/* grafiek 3 */
+$('s3').textContent='Brutomarge als percentage van de prijs zonder btw. De burger is het meest verkochte hoofdgerecht.';
+$('g3').innerHTML=D.g3.map(p=>{
+ const hl=p.id==='D02',tip=p.product+'\n'+nr(p.pct,1)+'% marge';
+ return '<button type="button" class="row'+(hl?' hl':'')+'" data-tip="'+tip+'" aria-label="'+tip.replace(/\n/g,', ')+'"><span class="lb">'+p.product+'</span><span class="tr"><span class="bar" style="left:0;width:'+(p.pct)+'%;background:var('+(hl?'--s2':'--grijs')+');border-radius:0 4px 4px 0"></span><span class="val" style="left:calc('+(p.pct)+'% + 5px)">'+nr(p.pct,1)+'%</span></span></button>'}).join('');
+$('t3').innerHTML=tabel(['Hoofdgerecht','Marge %'],D.g3.map(p=>[p.product,nr(p.pct,1)+'%']));
+
+/* tooltip */
+const tip=$('tip');let vast=null;
+const toon=(el,cx,cy)=>{tip.textContent=el.dataset.tip;tip.style.display='block';const w=tip.offsetWidth,h=tip.offsetHeight;
+ let l=cx+12,t=cy-h-10;if(l+w>innerWidth-8)l=Math.max(8,cx-w-12);if(t<8)t=cy+14;tip.style.left=l+'px';tip.style.top=t+'px'};
+const verberg=()=>{tip.style.display='none'};
+document.querySelectorAll('[data-tip]').forEach(el=>{
+ el.addEventListener('mousemove',e=>toon(el,e.clientX,e.clientY));
+ el.addEventListener('mouseleave',()=>{if(vast!==el)verberg()});
+ el.addEventListener('focus',()=>{const r=el.getBoundingClientRect();toon(el,r.left+r.width/2,r.top+8)});
+ el.addEventListener('blur',()=>{vast=null;verberg()});
+ el.addEventListener('click',e=>{vast=el;el.focus();toon(el,e.clientX,e.clientY)});
+});
+document.addEventListener('keydown',e=>{if(e.key==='Escape')verberg()});
+addEventListener('scroll',()=>{if(!vast)verberg()},{passive:true});
+</script>
+</body>
+</html>
